@@ -3,12 +3,35 @@
  */
 package com.sunwoo.project;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.net.Socket;
+
 public class ClientApp {
-  public String getGreeting() {
-    return "Hello World!";
-  }
+  String serverAddress;
+  int port;
 
   public static void main(String[] args) {
-    System.out.println(new ClientApp().getGreeting());
+    ClientApp app = new ClientApp("localhost" ,8888);
+    app.execute();
   }
+  public ClientApp(String serverAddress, int port) {
+    this.serverAddress = serverAddress;
+    this.port = port;
+  }
+  public void execute( ) {
+    try(Socket socket = new Socket(this.serverAddress, this.port);
+        DataInputStream in = new DataInputStream(socket.getInputStream());
+        DataOutputStream out = new DataOutputStream(socket.getOutputStream())) {
+
+      out.writeUTF("hello");
+      out.flush();
+
+      String response = in.readUTF();
+      System.out.println(response);
+
+    }catch (Exception e) {
+      System.out.println("서버와 통신 하는 중에 오류 발생!");    }
+  }
+
 }
