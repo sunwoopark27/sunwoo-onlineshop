@@ -6,6 +6,7 @@ package com.sunwoo.project;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.Socket;
+import java.util.ArrayList;
 import com.sunwoo.util.Prompt;
 
 public class ClientApp {
@@ -24,19 +25,54 @@ public class ClientApp {
     try(Socket socket = new Socket(this.serverAddress, this.port);
         DataInputStream in = new DataInputStream(socket.getInputStream());
         DataOutputStream out = new DataOutputStream(socket.getOutputStream())) {
-
-      while(true) {
+      while (true) {
         String message = Prompt.inputString("명령> ");
+
+        // 1) 명령어를 보낸다.
         out.writeUTF(message);
+
+        // 2) 서버에 보낼 데이터의 개수를 보낸다.
+        out.writeInt(3);
+
+        // 3) 서버에 데이터를 보낸다.
+        out.writeUTF("aaaa");
+        out.writeUTF("bbbb");
+        out.writeUTF("cccc");
+
         out.flush();
 
-        String response = in.readUTF();
-        System.out.println(response);
 
-        if(message.equals("quit")) {
+        // 서버가 보낸 데이터를 읽는다.
+        // 1) 작업 결과를 읽는다.
+        String response = in.readUTF();
+
+        // 2) 데이터의 개수를 읽는다.
+        int length = in.readInt();
+
+        // 3) 데이터의 개수 만큼 읽어 List 컬렉션에 보관한다.
+        ArrayList<String> data = null;
+        if (length > 0) {
+          data = new ArrayList<>();
+          for (int i = 0; i < length; i++) {
+            data.add(in.readUTF());
+          }
+        }
+
+        System.out.println("----------------------------");
+        System.out.printf("작업 결과: %s\n", response);
+        System.out.printf("데이터 개수: %d\n", length);
+        if (data != null) {
+          System.out.println("데이터:");
+          for (String str : data) {
+            System.out.println(str);
+          }
+        }
+
+        if (message.equals("quit")) {
           break;
         }
       }
+
       Prompt.close();
 
     }catch (Exception e) {
