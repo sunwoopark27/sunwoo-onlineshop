@@ -6,6 +6,7 @@ package com.sunwoo.project;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.Socket;
+import com.sunwoo.util.Prompt;
 
 public class ClientApp {
   String serverAddress;
@@ -24,11 +25,19 @@ public class ClientApp {
         DataInputStream in = new DataInputStream(socket.getInputStream());
         DataOutputStream out = new DataOutputStream(socket.getOutputStream())) {
 
-      out.writeUTF("hello");
-      out.flush();
+      while(true) {
+        String message = Prompt.inputString("명령> ");
+        out.writeUTF(message);
+        out.flush();
 
-      String response = in.readUTF();
-      System.out.println(response);
+        String response = in.readUTF();
+        System.out.println(response);
+
+        if(message.equals("quit")) {
+          break;
+        }
+      }
+      Prompt.close();
 
     }catch (Exception e) {
       System.out.println("서버와 통신 하는 중에 오류 발생!");    }
