@@ -6,12 +6,26 @@ package com.sunwoo.project;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.Socket;
-import java.util.ArrayList;
+import java.util.ArrayDeque;
+import java.util.Iterator;
+import java.util.LinkedList;
+import com.sunwoo.project.handler.BoardServiceExchangeReturn;
+import com.sunwoo.project.handler.BoardServiceProduct;
+import com.sunwoo.project.handler.BoardServiceReview;
+import com.sunwoo.project.handler.BoardServiceShipping;
 import com.sunwoo.util.Prompt;
 
 public class ClientApp {
   String serverAddress;
   int port;
+
+  static BoardServiceProduct boardServiceProduct = new BoardServiceProduct();
+  static BoardServiceReview boardServiceReview = new BoardServiceReview();
+  static BoardServiceShipping boardServiceShipping = new BoardServiceShipping();
+  static BoardServiceExchangeReturn boardServiceExchangeReturn = new BoardServiceExchangeReturn();
+
+  static ArrayDeque<String> commandStack = new ArrayDeque<>();
+  static LinkedList<String> commandQueue = new LinkedList<>();
 
   public static void main(String[] args) {
     ClientApp app = new ClientApp("localhost" ,8888);
@@ -22,61 +36,164 @@ public class ClientApp {
     this.port = port;
   }
   public void execute( ) {
+
+    //MemberService memberService = new MemberService();
+    //MemberValidatorHandler memberValidatorHandler = new MemberValidatorHandler(memberService.getMemberList());
+
+    //ProductService productService = new ProductService();
+    //ProductValidatorHandler productValidatorHandler = new ProductValidatorHandler(productService.getProductList());
+
+    //OrderService orderService = new OrderService(memberValidatorHandler, productValidatorHandler);
+    //OrderValidatorHandler orderValidatorHandler = new OrderValidatorHandler(orderService.getOrderList());
+
+    //ShippingService shippingService = new ShippingService(memberValidatorHandler, orderValidatorHandler);
+
     try(Socket socket = new Socket(this.serverAddress, this.port);
         DataInputStream in = new DataInputStream(socket.getInputStream());
         DataOutputStream out = new DataOutputStream(socket.getOutputStream())) {
-      while (true) {
-        String message = Prompt.inputString("명령> ");
+      while(true) {
+        System.out.println("▷ 메인 ◁");
+        System.out.println("1. 회원");
+        System.out.println("2. 상품");
+        System.out.println("3. 주문");
+        System.out.println("4. 배송");
+        System.out.println("5. 게시판");
+        System.out.println("0. 종료");
+        System.out.println();
 
-        // 1) 명령어를 보낸다.
-        out.writeUTF(message);
+        String command = Prompt.inputString("명령> ");
+        System.out.println();
 
-        // 2) 서버에 보낼 데이터의 개수를 보낸다.
-        out.writeInt(3);
+        commandStack.push(command);
+        commandQueue.offer(command);
 
-        // 3) 서버에 데이터를 보낸다.
-        out.writeUTF("aaaa");
-        out.writeUTF("bbbb");
-        out.writeUTF("cccc");
+        switch(command) {
 
-        out.flush();
+          case "1" :
+            //memberService.menu();
+            break;
 
+          case "2" :
+            //productService.menu();
+            break;
 
-        // 서버가 보낸 데이터를 읽는다.
-        // 1) 작업 결과를 읽는다.
-        String response = in.readUTF();
+          case "3" :
+            //orderService.menu();
+            break;
 
-        // 2) 데이터의 개수를 읽는다.
-        int length = in.readInt();
+          case "4" :
+            //shippingService.menu();
+            break;
 
-        // 3) 데이터의 개수 만큼 읽어 List 컬렉션에 보관한다.
-        ArrayList<String> data = null;
-        if (length > 0) {
-          data = new ArrayList<>();
-          for (int i = 0; i < length; i++) {
-            data.add(in.readUTF());
-          }
-        }
+          case "5" :
+            out.writeUTF("chooseBoard");
+            out.writeInt(0);
+            out.flush();
 
-        System.out.println("----------------------------");
-        System.out.printf("작업 결과: %s\n", response);
-        System.out.printf("데이터 개수: %d\n", length);
-        if (data != null) {
-          System.out.println("데이터:");
-          for (String str : data) {
-            System.out.println(str);
-          }
-        }
+            in.readUTF();
+            in.readInt();
+            chooseBoard(in,out);
+            break;
 
-        if (message.equals("quit")) {
-          break;
+          case "history" : 
+
+            printCommandHistory(commandStack.iterator());
+            System.out.println();
+            break;
+
+          case "history2" : 
+            printCommandHistory(commandQueue.iterator());
+            System.out.println();
+            break;
+
+          case "0" :
+
+            out.writeUTF("quit");
+            out.writeInt(0);
+            out.flush();
+
+            in.readUTF();
+            in.readInt();
+
+            System.out.println("이용해주셔서 감사합니다.");
+
+            return;
+          default :
+
+            System.out.println("메뉴 번호가 맞지 않습니다.");
+            System.out.println();
         }
       }
-
-      Prompt.close();
-
     }catch (Exception e) {
-      System.out.println("서버와 통신 하는 중에 오류 발생!");    }
+      System.out.println("서버와 통신 하는 중에 오류 발생!"); 
+      e.printStackTrace();
+    }
+    Prompt.close();
+  }
+
+  //  public static void chooseBoard(DataInputStream in, DataOutputStream out) throws Exception {
+  //    while(true) {
+  //      System.out.println("[메인 > 게시판]");
+  //      System.out.println("1. 상품 문의");
+  //      System.out.println("2. 배송 문의");
+  //      System.out.println("3. 교환/반품 문의");
+  //      System.out.println("4. 리뷰");
+  //      System.out.println("0. 이전 메뉴");
+  //      System.out.println();
+  //
+  //      String command = Prompt.inputString("명령> ");
+  //      System.out.println();
+  //
+  //      switch(command) {
+  //        case "1" :
+  //          out.writeUTF("product");
+  //          out.writeInt(0);
+  //          out.flush();
+  //
+  //          in.readUTF();
+  //          in.readInt();
+  //
+  //          boardServiceProduct.menu("상품 문의");
+  //          break;
+  //
+  //        case "2" :
+  //          //boardServiceShipping.menu("배송 문의");
+  //          break;
+  //
+  //        case "3" :
+  //          //boardServiceExchangeReturn.menu("교환/반품 문의");
+  //          break;
+  //
+  //        case "4" :
+  //          //boardServiceReview.menu("리뷰");
+  //          break;
+  //
+  //        case "0" :
+  //          System.out.println("메인으로 돌아갑니다.");
+  //          System.out.println();
+  //          return;
+  //
+  //        default :
+  //          System.out.println("잘못된 메뉴 번호 입니다.");
+  //
+  //      }
+  //      System.out.println();
+  //    }
+  //  }
+
+  private static void printCommandHistory(Iterator<String> iterator) {
+
+    int count = 0;
+    while(iterator.hasNext()) {
+      System.out.println(iterator.next());
+      if(++count % 5 == 0) {
+        String input = Prompt.inputString(": ");
+        if(input.equalsIgnoreCase("q")) {
+          break;
+        }
+
+      }
+    }
   }
 
 }
