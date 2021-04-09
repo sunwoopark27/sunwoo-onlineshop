@@ -59,17 +59,6 @@ public class ServerApp {
           sendResponse(out, "success");
           break;
         }
-        // clientapp execute()에서 5번 게시판을 눌렀을 때
-        if (request.getCommand().equals("chooseBoard")) {
-          sendResponse(out, "게시판 메뉴로 이동\n");
-
-          Request requestBoard = receiveRequest(in);
-          log(request);
-
-          if(requestBoard.getCommand().equals("product")) {
-            sendResponse(out,"상품 게시판으로 이동\n");
-          }
-        }
 
         DataTable dataTable = findDataTable(request.getCommand());
 

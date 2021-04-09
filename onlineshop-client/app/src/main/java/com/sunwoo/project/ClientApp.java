@@ -7,22 +7,26 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.Socket;
 import java.util.ArrayDeque;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
-import com.sunwoo.project.handler.BoardServiceExchangeReturn;
+import com.sunwoo.project.handler.BoardChooseHandler;
 import com.sunwoo.project.handler.BoardServiceProduct;
-import com.sunwoo.project.handler.BoardServiceReview;
-import com.sunwoo.project.handler.BoardServiceShipping;
+import com.sunwoo.project.handler.MenuService;
 import com.sunwoo.util.Prompt;
 
-public class ClientApp {
+public class ClientApp implements MenuService{
+  @Override
+  public void menu(DataInputStream in, DataOutputStream out) throws Exception {
+    //map을 이용해 호출하기 위해 놔둠  
+  }
   String serverAddress;
   int port;
 
   static BoardServiceProduct boardServiceProduct = new BoardServiceProduct();
-  static BoardServiceReview boardServiceReview = new BoardServiceReview();
-  static BoardServiceShipping boardServiceShipping = new BoardServiceShipping();
-  static BoardServiceExchangeReturn boardServiceExchangeReturn = new BoardServiceExchangeReturn();
+  //static BoardServiceReview boardServiceReview = new BoardServiceReview();
+  //static BoardServiceShipping boardServiceShipping = new BoardServiceShipping();
+  //static BoardServiceExchangeReturn boardServiceExchangeReturn = new BoardServiceExchangeReturn();
 
   static ArrayDeque<String> commandStack = new ArrayDeque<>();
   static LinkedList<String> commandQueue = new LinkedList<>();
@@ -37,6 +41,8 @@ public class ClientApp {
   }
   public void execute( ) {
 
+    HashMap<String,MenuService> menumap = new HashMap<>();
+    menumap.put("5", new BoardChooseHandler());
     //MemberService memberService = new MemberService();
     //MemberValidatorHandler memberValidatorHandler = new MemberValidatorHandler(memberService.getMemberList());
 
@@ -85,16 +91,6 @@ public class ClientApp {
             //shippingService.menu();
             break;
 
-          case "5" :
-            out.writeUTF("chooseBoard");
-            out.writeInt(0);
-            out.flush();
-
-            in.readUTF();
-            in.readInt();
-            chooseBoard(in,out);
-            break;
-
           case "history" : 
 
             printCommandHistory(commandStack.iterator());
@@ -118,10 +114,14 @@ public class ClientApp {
             System.out.println("이용해주셔서 감사합니다.");
 
             return;
-          default :
+          default:
+            MenuService commandHandler = menumap.get(command);
 
-            System.out.println("메뉴 번호가 맞지 않습니다.");
-            System.out.println();
+            if (commandHandler == null) {
+              System.out.println("실행할 수 없는 명령입니다.");
+            } else {
+              commandHandler.menu(in, out);
+            }
         }
       }
     }catch (Exception e) {
@@ -132,6 +132,9 @@ public class ClientApp {
   }
 
   //  public static void chooseBoard(DataInputStream in, DataOutputStream out) throws Exception {
+  //
+  //
+  //
   //    while(true) {
   //      System.out.println("[메인 > 게시판]");
   //      System.out.println("1. 상품 문의");
@@ -153,7 +156,7 @@ public class ClientApp {
   //          in.readUTF();
   //          in.readInt();
   //
-  //          boardServiceProduct.menu("상품 문의");
+  //          boardServiceProduct.menu();
   //          break;
   //
   //        case "2" :
